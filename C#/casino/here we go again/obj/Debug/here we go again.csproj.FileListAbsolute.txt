@@ -1,0 +1,8 @@
+C:\Users\matya\OneDrive\Dokumenty\here we go again\here we go again\bin\Debug\here we go again.exe.config
+C:\Users\matya\OneDrive\Dokumenty\here we go again\here we go again\bin\Debug\here we go again.exe
+C:\Users\matya\OneDrive\Dokumenty\here we go again\here we go again\bin\Debug\here we go again.pdb
+C:\Users\matya\OneDrive\Dokumenty\here we go again\here we go again\obj\Debug\here we go again.csproj.AssemblyReference.cache
+C:\Users\matya\OneDrive\Dokumenty\here we go again\here we go again\obj\Debug\here we go again.csproj.SuggestedBindingRedirects.cache
+C:\Users\matya\OneDrive\Dokumenty\here we go again\here we go again\obj\Debug\here we go again.csproj.CoreCompileInputs.cache
+C:\Users\matya\OneDrive\Dokumenty\here we go again\here we go again\obj\Debug\here we go again.exe
+C:\Users\matya\OneDrive\Dokumenty\here we go again\here we go again\obj\Debug\here we go again.pdb
