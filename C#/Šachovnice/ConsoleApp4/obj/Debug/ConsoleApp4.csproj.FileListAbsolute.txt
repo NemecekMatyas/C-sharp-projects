@@ -1,0 +1,8 @@
+C:\Users\matya\OneDrive\Dokumenty\ConsoleApp4\ConsoleApp4\bin\Debug\ConsoleApp4.exe.config
+C:\Users\matya\OneDrive\Dokumenty\ConsoleApp4\ConsoleApp4\bin\Debug\ConsoleApp4.exe
+C:\Users\matya\OneDrive\Dokumenty\ConsoleApp4\ConsoleApp4\bin\Debug\ConsoleApp4.pdb
+C:\Users\matya\OneDrive\Dokumenty\ConsoleApp4\ConsoleApp4\obj\Debug\ConsoleApp4.csproj.AssemblyReference.cache
+C:\Users\matya\OneDrive\Dokumenty\ConsoleApp4\ConsoleApp4\obj\Debug\ConsoleApp4.csproj.SuggestedBindingRedirects.cache
+C:\Users\matya\OneDrive\Dokumenty\ConsoleApp4\ConsoleApp4\obj\Debug\ConsoleApp4.csproj.CoreCompileInputs.cache
+C:\Users\matya\OneDrive\Dokumenty\ConsoleApp4\ConsoleApp4\obj\Debug\ConsoleApp4.exe
+C:\Users\matya\OneDrive\Dokumenty\ConsoleApp4\ConsoleApp4\obj\Debug\ConsoleApp4.pdb
