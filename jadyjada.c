@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-
+//TODO: Dodělat dynamickou paměť pro libovolný počet toků
 //struktura pro jeden Tok
 typedef struct {
     int flow_id;
@@ -14,25 +14,22 @@ typedef struct {
     double packet_count;
     double avg_interarrival_time;
     double avg_packet_length; //následně se vypočítá
-    int poradi[250];
 } Tok;
 
 //struktura pro jeden Shluk
 typedef struct {
     int pocetToku;
     int nazevTok[250];
-    int poradi[250];
 } Shluk;
 
 
-int nacteniToku(FILE *soubor, Tok tok[]); //načtení všech toků z přidaného soubrou
+int nacteniToku(FILE *soubor, Tok tok[]); //načtení všech toků ze soubrou
 double eukleidova(Tok *t1, Tok *t2, double WB, double WT, double WD, double WS); //funkce pro vypočítání vzdálenosti mezi dvěmi toky
-void vytvareniShluku(int pocetVsechToku, Tok tok[], int pozadovanyPocetShluku, double WB, double WT, double WD, double WS); //vytváří shluky a náaslědně je slučuje, pokdu potřeba
-void seraditTokyVeShluku(Tok tok[], Shluk *shluk);
-void seraditShluky(Shluk shluk[], int pocet, Tok tok[]);
-int jsouVeStejnemShluku(Shluk shluk[], int pocetShluku, int nazevTokPrvni, int nazevTokDruhy);
-void spojShluky(Shluk shluk[], int i, int j, int *pocetShluku);
+void vytvareniShluku(int pocetVsechToku, Tok tok[], int pozadovanyPocetShluku, double WB, double WT, double WD, double WS); //vytváří shluky
+int jsouVeStejnemShluku(Shluk shluk[], int pocetShluku, int nazevTokPrvni, int nazevTokDruhy); //funkce pro kontrolu toků ve stejném shluku pro funkci vzdalenostShluku a spojShluky
+void spojShluky(Shluk shluk[], int i, int j, int *pocetShluku); //spojuje shluk:)
 double vzdalenostShluku(Shluk *shlukKPorovnaniPrvni, Shluk *shlukKporovnaniDruhy, Tok tok[], double WB, double WT, double WD, double WS);
+void seraditTokyAShluky(Shluk shluk[], int pocet, Tok tok[]);
 
 int main(int argc, char *argv[])
 {
@@ -40,42 +37,40 @@ int main(int argc, char *argv[])
     int pozadovanyPocetShluku = -1;
 
     if (argc == 6) { //pokud nebyl zadáno N, tedy požadovaný počet shluků, musíme všem vahám posunout = argument o jedno doleva
-        //char *fileOutput = argv[1];
 
         char* ukazatel;
         WB = strtod(argv[2], &ukazatel);
-        if ((*ukazatel != '\0')|| WB<0) return 0; //pokud se nepovede konverze nebo váha je <0, error
-
+        if ((*ukazatel != '\0')|| WB<0) {printf("Nespravny argument pro: WB");return 0;} //pokud se nepovede konverze nebo váha je <0, -> ERROR
+                                                                                         //ošetření nesprávného vstupu
         WT = strtod(argv[3], &ukazatel);
-        if ((*ukazatel != '\0')||WT<0) return 0;
+        if ((*ukazatel != '\0')||WT<0) {printf("Nespravny argument pro: WB");return 0;}
 
         WD = strtod(argv[4], &ukazatel);
-        if ((*ukazatel != '\0')||WD<0) return 0;
+        if ((*ukazatel != '\0')||WD<0) {printf("Nespravny argument pro: WB");return 0;}
 
         WS = strtod(argv[5], &ukazatel);
-        if ((*ukazatel != '\0')||WS<0) return 0;
+        if ((*ukazatel != '\0')||WS<0) {printf("Nespravny argument pro: WB");return 0;}
     }
 
     else if (argc == 7) {
-
         char *ukazatel;
 
         pozadovanyPocetShluku = strtod(argv[2], &ukazatel);
-        if ((*ukazatel != '\0')||pozadovanyPocetShluku<0) {printf("Nespravny argument pro: pozadovanyPocetShluku");return 0;} //ošetření špatného vstupu
+        if ((*ukazatel != '\0')||pozadovanyPocetShluku<0) {printf("Nespravny argument pro: pozadovanyPocetShluku");return 0;} //ošetření nesprávného vstupu
 
-        WB = strtod(argv[2], &ukazatel);
-        if ((*ukazatel != '\0')|| WB<0) {printf("Nespravny argument pro: WB");return 0;} //pokud se nepovede konverze nebo váha je <0, error
+        WB = strtod(argv[3], &ukazatel);
+        if ((*ukazatel != '\0')|| WB<0) {printf("Nespravny argument pro: WB");return 0;} //pokud se nepovede konverze nebo váha je < 0 -> ERROR
 
-        WT = strtod(argv[3], &ukazatel);
+        WT = strtod(argv[4], &ukazatel);
         if ((*ukazatel != '\0')||WT<0) {printf("Nespravny argument pro: WT");return 0;}
 
-        WD = strtod(argv[4], &ukazatel);
+        WD = strtod(argv[5], &ukazatel);
         if ((*ukazatel != '\0')||WD<0) {printf("Nespravny argument pro: WD");return 0;}
 
-        WS = strtod(argv[5], &ukazatel);
+        WS = strtod(argv[6], &ukazatel);
         if ((*ukazatel != '\0')||WS<0) {printf("Nespravny argument pro: WS");return 0;}
     }
-    else { //Uzivatel musí zadat alespoň všechny hodnoty vah nebo jich zadal až moc
+    else { //Uzivatel zadal příliš málo vah nebo naopak až moc -> v každém případě ERROR
         printf("Chyba na vstupnich argumentech");
         return 0;
     }
@@ -88,7 +83,7 @@ int main(int argc, char *argv[])
 
     Tok tok[250];//vytvoření struktury pole TOK
 
-    int pocet = nacteniToku(soubor, tok);
+    int pocet = nacteniToku(soubor, tok); //počet načtených toků ze souboru
 
     vytvareniShluku(pocet, tok, pozadovanyPocetShluku,  WB,  WT,  WD,  WS);
 
@@ -118,12 +113,16 @@ int nacteniToku(FILE *soubor, Tok tok[])
 
     for (int i = 0; i < pocetToku; i++) //počet opakování na základě počtu načtených toků ze vstuúního souboru
     {
-        if (fgets(radek, sizeof(radek), soubor) == NULL) {printf("Chyba pri cteni ze souboru");break;}
-        if(sscanf(radek, "%d %s %s %d %d %lf %lf", &flow, src, dst, &total, &duration, &packet, &avg) != 7) return 0;
+        if (fgets(radek, sizeof(radek), soubor) == NULL) {printf("Chyba pri cteni ze souboru");break;} //ošetření chybového čtení ze souboru
+        if(sscanf(radek, "%d %s %s %d %d %lf %lf", &flow, src, dst, &total, &duration, &packet, &avg)
+            != 7 || *src<0 || *dst<0 || total<0 || duration<0 || packet<0 || avg<0) {//ošetření nedostatku atributů nebo pokud jsou hodnoty <0
+            printf("\n Chyba pri nacitani toku ze souboru");
+            return 0;
+        }
         sscanf(radek, "%d %s %s %d %d %lf %lf",
                &flow, src, dst, &total, &duration, &packet, &avg); //řádek po řádku načítání atributů daného toku
 
-        tok[i].flow_id = flow;
+        tok[i].flow_id = flow; //postupné ukládání všech informací o toku do pole toků
         strcpy(tok[i].src_ip, src);
         strcpy(tok[i].dst_ip, dst);
         tok[i].total_bytes = total;
@@ -154,7 +153,7 @@ void vytvareniShluku(int pocetVsechToku, Tok tok[], int pozadovanyPocetShluku,
     Shluk shluk[250];
     int pocetShlukuAktualne = pocetVsechToku;
 
-    // inicializace: každý tok je samostatný shluk
+    // 1.krok -> každý tok je samostatný shluk
     for (int i = 0; i < pocetVsechToku; i++) {
         shluk[i].pocetToku = 1;
         shluk[i].nazevTok[0] = i; // index do pole tok[]
@@ -162,34 +161,31 @@ void vytvareniShluku(int pocetVsechToku, Tok tok[], int pozadovanyPocetShluku,
 
     // hlavní slučovací smyčka
     while (pocetShlukuAktualne > pozadovanyPocetShluku) {
-        double minDist = INFINITY;
-        int bestI = -1, bestJ = -1;
+        double minVzdalenost = INFINITY;
+        int nejlepsiI = -1, nejlepsiJ = -1;
 
         // najdi nejbližší dvojici shluků
         for (int i = 0; i < pocetShlukuAktualne; i++) {
             for (int j = i+1; j < pocetShlukuAktualne; j++) {
-                double dist = vzdalenostShluku(&shluk[i], &shluk[j], tok, WB, WT, WD, WS);
-                if (dist < minDist) {
-                    minDist = dist;
-                    bestI = i;
-                    bestJ = j;
+                double vzdalenost = vzdalenostShluku(&shluk[i], &shluk[j], tok, WB, WT, WD, WS);
+                if (vzdalenost < minVzdalenost) {
+                    minVzdalenost = vzdalenost;
+                    nejlepsiI = i;
+                    nejlepsiJ = j;
                 }
             }
         }
 
         // spoj nejbližší dvojici
-        if (bestI != -1 && bestJ != -1) {
-            spojShluky(shluk, bestI, bestJ, &pocetShlukuAktualne);
+        if (nejlepsiI != -1 && nejlepsiJ != -1) {
+            spojShluky(shluk, nejlepsiI, nejlepsiJ, &pocetShlukuAktualne);
         }
-        // seřaď toky uvnitř nového shluku
-        seraditTokyVeShluku(tok, &shluk[bestI]);
 
-        // seřaď celé pole shluků podle nejmenšího flow_id
-        seraditShluky(shluk, pocetShlukuAktualne, tok);
+        seraditTokyAShluky(shluk, pocetShlukuAktualne, tok);
 
     }
 
-    // výpis výsledku
+    // výpis shluků a toků
     printf("\nClusters:");
     for (int i = 0; i < pocetShlukuAktualne; i++) {
         printf("\ncluster %d: ", i);
@@ -199,33 +195,29 @@ void vytvareniShluku(int pocetVsechToku, Tok tok[], int pozadovanyPocetShluku,
     }
 }
 
-
-void seraditTokyVeShluku(Tok tok[], Shluk *shluk) {
-
-    for (int i = 0; i < shluk->pocetToku - 1; i++) {
-
-        // když je tok i větší než tok i+1
-            if (tok[shluk->nazevTok[i]].flow_id > tok[shluk->nazevTok[i+1]].flow_id) {
-
-            int nejmensi = shluk->nazevTok[i+1];
-            int j = i;
-
-            // posouvání vlevo, dokud je větší
-            while (j >= 0 && tok[nejmensi].flow_id < tok[shluk->nazevTok[j]].flow_id) {
-                shluk->nazevTok[j+1] = shluk->nazevTok[j];
-                j--;
+void seraditTokyAShluky(Shluk shluk[], int pocet, Tok tok[]) {
+    // Seřadit toky uvnitř každého shluku
+    for (int k = 0; k < pocet; k++) {
+        for (int i = 0; i < shluk[k].pocetToku - 1; i++) {
+            for (int j = i + 1; j < shluk[k].pocetToku; j++) {
+                if (tok[shluk[k].nazevTok[i]].flow_id > tok[shluk[k].nazevTok[j]].flow_id) {
+                    int tmp = shluk[k].nazevTok[i];
+                    shluk[k].nazevTok[i] = shluk[k].nazevTok[j];
+                    shluk[k].nazevTok[j] = tmp;
+                }
             }
-            shluk->nazevTok[j+1] = nejmensi;
         }
     }
-}
-void seraditShluky(Shluk shluk[], int pocet, Tok tok[])
-{
+    //Seřadit celé shluky podle nejmenšího flow_id
     for (int i = 0; i < pocet - 1; i++) {
-
-        if (tok[shluk[i].nazevTok[0]].flow_id > tok[shluk[i+1].nazevTok[0]].flow_id)
-        {
-           printf("\n\n tok[shluk[i].nazevTok[0]].flow_id = %d a tok[shluk[i+1].nazevTok[0]].flow_id = %d",tok[shluk[i].nazevTok[0]].flow_id ,tok[shluk[i+1].nazevTok[0]].flow_id);
+        for (int j = i + 1; j < pocet; j++) {
+            int minI = tok[shluk[i].nazevTok[0]].flow_id;
+            int minJ = tok[shluk[j].nazevTok[0]].flow_id;
+            if (minI > minJ) {
+                Shluk shlukyRazeni = shluk[i];
+                shluk[i] = shluk[j];
+                shluk[j] = shlukyRazeni;
+            }
         }
     }
 }
